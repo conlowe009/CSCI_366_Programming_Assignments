@@ -23,15 +23,20 @@ Client::~Client() {
 
 
 void Client::initialize(unsigned int player, unsigned int board_size){
+    //Initialize variables for the Client class
     this->player = player;
     this->board_size = board_size;
+
     //Vector for action board
     vector<vector<int>> board(board_size, vector<int>(board_size));
 
+    //Create file name based on player and open ofstream
     string p = std::to_string(player);
     std::ofstream init("player_" + p + ".action_board.json");
+
     //Serializing file to output to JSON file
     cereal::JSONOutputArchive archive(init);
+
     //Casts vector to name value pair and archives it
     archive(CEREAL_NVP(board));
 }
@@ -48,6 +53,8 @@ void Client::fire(unsigned int x, unsigned int y) {
 bool Client::result_available() {
     string file_name = "player_" + std::to_string(this->player) + ".result.json";
     ifstream in_file(file_name);
+
+    //If file can be opened, then return true
     if (in_file)
         return true;
     else
@@ -56,13 +63,18 @@ bool Client::result_available() {
 
 
 int Client::get_result() {
+    //Create file name based on player from Client class
     string file_name = "player_" + std::to_string(this->player) + ".result.json";
+
+    //Initialize variable for derserialized data
     int result = 0;
     ifstream result_ifp(file_name);
     cereal::JSONInputArchive read_archive(result_ifp);
     read_archive(result);
     remove (file_name.c_str());
     result_ifp.close();
+
+    //Result should never return an int greater than 1
     if (result > 1)
         throw ClientException("Bad result");
     return result;
@@ -78,7 +90,8 @@ void Client::update_action_board(int result, unsigned int x, unsigned int y) {
     cereal::JSONInputArchive read_archive(board_ifp);
     read_archive(board);
     board_ifp.close();
-    //Update action board with result
+
+    //Update local board with result obtained from deserialization
     board[x][y] = result;
 
     //Reserializes updated board into the same file
@@ -104,6 +117,7 @@ string Client::render_action_board(){
             str += std::to_string(board[i][j]) + "\n";
         }
     }
+
     //Outputs board for viewing
     cout << str;
     return str;

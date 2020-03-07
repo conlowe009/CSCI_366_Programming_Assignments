@@ -26,6 +26,9 @@
  * @return length of the file in bytes
  */
 int get_file_length(ifstream *file) {
+    /*This stuff here...magic. Overcomplicated and unnecessary magic.
+     * Either that or I'm just stupid. Not sure which I'm more scared of.
+     */
     file->seekg(0, ios::beg);
     int s = file->tellg();
     file->seekg(0, ios::end);
@@ -59,6 +62,7 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
     /*Makes sure player number is valid*/
     if (player > MAX_PLAYERS || player < 1)
         throw ServerException("Bad player number");
+
     /*Test if x or y is out of bounds*/
     if (x >= BOARD_SIZE || y >= BOARD_SIZE) {
         cout << "Coordinate(s) out of bounds\n";
@@ -70,11 +74,13 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
     string line;
     vector<vector<char>> board;
     ifstream p;
+
     //Opens the setup board of the opposing player
     if (player == 1)
         p.open("player_2.setup_board.txt");
     else
         p.open("player_1.setup_board.txt");
+
     /* Reads the setup board of the opposing player into a 2D vector
      * While loop and for loop below was taken from Stackoverflow at:
      * https://stackoverflow.com/questions/56554212/how-do-i-read-a-text-file-into-a-2d-vector
@@ -88,8 +94,10 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
         }
         board.push_back(row);
     }
+
     //Close the file reader
     p.close();
+
     /* Determines whether the parameter defined coordinates
      * result in a hit or miss on the opponent's board */
     if (board[y][x] != '_')
@@ -100,21 +108,32 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
 
 
 int Server::process_shot(unsigned int player) {
+    //Cast player to string. Easier for making file names.
     string p = std::to_string(player);
+
     //Variables to deserialize shot coordinates into
     int x = 0, y = 0;
     string input_file = "player_" + p + ".shot.json";
+
     //De-serializing
     ifstream coords_ifp(input_file);
     cereal::JSONInputArchive read_archive(coords_ifp);
     read_archive(x,y);
+
     //Remove input file for cleanup
     remove(input_file.c_str());
     coords_ifp.close();
-    //Evaluates correct shot with player and coordinates obtained from deserialization
-    int shot = evaluate_shot(player, x, y);
+
+    /* Evaluates correct shot with player and coordinates obtained from
+     * deserialization and writes to the result file based on the value
+     * returned from evaluate_shot
+     */
     string file_name = "player_" + p + ".result.json";
+    int shot = evaluate_shot(player, x, y);
+
+    //Removes prior instances of shot file
     remove(file_name.c_str());
+
     if (shot == HIT) {
         ofstream file(file_name);
         cereal::JSONOutputArchive out_archive (file);

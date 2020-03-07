@@ -40,10 +40,10 @@ void Server::initialize(unsigned int board_size,
     this->board_size = board_size;
     /* Opens up the setup up board streams and throws an error if the
      * files cannot be opened*/
-    this->p1_setup_board.open(p1_setup_board, ifstream::in);
+    this->p1_setup_board.open(p1_setup_board);
     if (this->p1_setup_board.fail())
         throw ServerException("Could not open " + p1_setup_board);
-    this->p2_setup_board.open(p1_setup_board, ifstream::in);
+    this->p2_setup_board.open(p2_setup_board);
     if (this->p2_setup_board.fail())
         throw ServerException("Could not open " + p2_setup_board);
 
@@ -75,7 +75,10 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
         p.open("player_2.setup_board.txt");
     else
         p.open("player_1.setup_board.txt");
-    //Reads the setup board of the opposing player into a 2D vector
+    /* Reads the setup board of the opposing player into a 2D vector
+     * While loop and for loop below was taken from Stackoverflow at:
+     * https://stackoverflow.com/questions/56554212/how-do-i-read-a-text-file-into-a-2d-vector
+     */
     while (getline(p, line)) {
         vector<char> row;
         for (char &c : line) {
@@ -113,19 +116,19 @@ int Server::process_shot(unsigned int player) {
     string file_name = "player_" + p + ".result.json";
     remove(file_name.c_str());
     if (shot == HIT) {
-        std::ofstream file(file_name);
+        ofstream file(file_name);
         cereal::JSONOutputArchive out_archive (file);
         out_archive(cereal::make_nvp("result", HIT));
         return SHOT_FILE_PROCESSED;
     }
     else if (shot == MISS) {
-        std::ofstream file(file_name);
+        ofstream file(file_name);
         cereal::JSONOutputArchive out_archive (file);
         out_archive(cereal::make_nvp("result", MISS));
         return SHOT_FILE_PROCESSED;
     }
     else if (shot == OUT_OF_BOUNDS) {
-        std::ofstream file(file_name);
+        ofstream file(file_name);
         cereal::JSONOutputArchive out_archive (file);
         out_archive(cereal::make_nvp("result", OUT_OF_BOUNDS));
         return SHOT_FILE_PROCESSED;

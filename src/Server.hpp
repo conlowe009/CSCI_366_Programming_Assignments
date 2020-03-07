@@ -92,7 +92,9 @@ public:
    /**
     * Processes a shot issued by player
     *
-    * Gets the shot from player, extracts coordinates, passes the information of evaluate_shot, and writes the result
+    * Gets the shot from player, extracts coordinates,
+    * passes the information of evaluate_shot,
+    * and writes the result
     * into player_#.result.json.
     * @param player - player number
     * @return returns SHOT_PROCESSED, or NO_SHOT_FILE if nothing to process

@@ -18,29 +18,93 @@
 #include "Client.hpp"
 
 Client::~Client() {
+    cout << "Clearing action board" << endl;
 }
 
 
 void Client::initialize(unsigned int player, unsigned int board_size){
+    this->player = player;
+    this->board_size = board_size;
+    //Vector for action board
+    vector<vector<int>> board(board_size, vector<int>(board_size));
+
+    string p = std::to_string(player);
+    std::ofstream init("player_" + p + ".action_board.json");
+    //Serializing file to output to JSON file
+    cereal::JSONOutputArchive archive(init);
+    //Casts vector to name value pair and archives it
+    archive(CEREAL_NVP(board));
 }
 
 
 void Client::fire(unsigned int x, unsigned int y) {
+    string p = std::to_string(player);
+    std::ofstream fire("player_" + p + ".shot.json");
+    cereal::JSONOutputArchive archive(fire);
+    archive(CEREAL_NVP(x), CEREAL_NVP(y));
 }
 
 
 bool Client::result_available() {
+    string file_name = "player_" + std::to_string(this->player) + ".result.json";
+    ifstream in_file(file_name);
+    if (in_file)
+        return true;
+    else
+        return false;
 }
 
 
 int Client::get_result() {
+    string file_name = "player_" + std::to_string(this->player) + ".result.json";
+    int result = 0;
+    ifstream result_ifp(file_name);
+    cereal::JSONInputArchive read_archive(result_ifp);
+    read_archive(result);
+    remove (file_name.c_str());
+    result_ifp.close();
+    if (result > 1)
+        throw ClientException("Bad result");
+    return result;
 }
 
 
 
 void Client::update_action_board(int result, unsigned int x, unsigned int y) {
+    // Deserializes action board into local board
+    string file_name = "player_" + std::to_string(this->player) + ".action_board.json";
+    vector<vector<int>> board(board_size, vector<int>(board_size));
+    ifstream board_ifp(file_name);
+    cereal::JSONInputArchive read_archive(board_ifp);
+    read_archive(board);
+    board_ifp.close();
+    //Update action board with result
+    board[x][y] = result;
+
+    //Reserializes updated board into the same file
+    std::ofstream update(file_name);
+    cereal::JSONOutputArchive archive(update);
+    archive(CEREAL_NVP(board));
 }
 
 
 string Client::render_action_board(){
+    //Reads in action board into a locally declared vector
+    string file_name = "player_" + std::to_string(this->player) + ".action_board.json";
+    vector<vector<int>> board(board_size, vector<int>(board_size));
+    ifstream board_ifp(file_name);
+    cereal::JSONInputArchive read_archive(board_ifp);
+    read_archive(board);
+    board_ifp.close();
+
+    //Converts vector board into a single string
+    string str;
+    for(int i = 0; i < board_size; i++){
+        for(int j = 0; j < board_size; j++){
+            str += std::to_string(board[i][j]) + "\n";
+        }
+    }
+    //Outputs board for viewing
+    cout << str;
+    return str;
 }

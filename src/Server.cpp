@@ -40,9 +40,10 @@ int get_file_length(ifstream *file) {
 void Server::initialize(unsigned int board_size,
                         string p1_setup_board,
                         string p2_setup_board){
+    /**
     this->board_size = board_size;
-    /* Opens up the setup up board streams and throws an error if the
-     * files cannot be opened*/
+     //Opens up the setup up board streams and throws an error if the
+     //files cannot be opened
     this->p1_setup_board.open(p1_setup_board);
     if (this->p1_setup_board.fail())
         throw ServerException("Could not open " + p1_setup_board);
@@ -50,12 +51,13 @@ void Server::initialize(unsigned int board_size,
     if (this->p2_setup_board.fail())
         throw ServerException("Could not open " + p2_setup_board);
 
-    /* Check to see if the files are the correct size */
+    //Check to see if the files are the correct size
     if(get_file_length(&(this->p1_setup_board)) != (board_size*(board_size+1)))
         throw ServerException("Incorrect board size");
     if(get_file_length(&(this->p2_setup_board)) != (board_size*(board_size+1)))
         throw ServerException("Incorrect board size");
-     }
+    */
+}
 
 
 Server::~Server() {

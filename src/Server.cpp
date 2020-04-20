@@ -40,31 +40,72 @@ int get_file_length(ifstream *file) {
 void Server::initialize(unsigned int board_size,
                         string p1_setup_board,
                         string p2_setup_board){
-    /**
+    /* Set argument's board size to object's board size */
     this->board_size = board_size;
-     //Opens up the setup up board streams and throws an error if the
-     //files cannot be opened
-    this->p1_setup_board.open(p1_setup_board);
-    if (this->p1_setup_board.fail())
+
+     /*Opens up the setup up board streams and throws an error if the
+      * files cannot be opened and calls scan_setup_board and returns
+      * the pointer to the BitArray2D object based on the input file name */
+    ifstream board1(p1_setup_board);
+    if (board1.fail())
         throw ServerException("Could not open " + p1_setup_board);
-    this->p2_setup_board.open(p2_setup_board);
-    if (this->p2_setup_board.fail())
+    this->p1_setup_board = scan_setup_board(p1_setup_board);
+
+    ifstream board2(p2_setup_board);
+    if (board2.fail())
         throw ServerException("Could not open " + p2_setup_board);
+    this->p2_setup_board = scan_setup_board(p2_setup_board);
 
-    //Check to see if the files are the correct size
-    if(get_file_length(&(this->p1_setup_board)) != (board_size*(board_size+1)))
+    /* Check to see if the files are the correct size and throws an
+     * error if files are not the correct size */
+    if(get_file_length(&(board1)) != (board_size*(board_size+1)))
         throw ServerException("Incorrect board size");
-    if(get_file_length(&(this->p2_setup_board)) != (board_size*(board_size+1)))
+    if(get_file_length(&(board2)) != (board_size*(board_size+1)))
         throw ServerException("Incorrect board size");
-    */
 }
 
 
-Server::~Server() {
-}
+Server::~Server() { /* Deconstructor */ }
 
 
 BitArray2D *Server::scan_setup_board(string setup_board_name){
+    /* BitArray2D object to return once bits have been set */
+    BitArray2D *board_obj = new BitArray2D(board_size, board_size);
+
+    /* Puts setup file board into char vector to easily iterate through it
+     * so we can find where there are ship positions. Before the BitArray2D
+     * object is returned, the vector gets deleted to save space. */
+    vector<vector<char>> read_board;
+    string line;
+    ifstream read(setup_board_name);
+
+    while (getline(read, line)) {
+        vector<char> row;
+        for (char &c : line) {
+            if (c != '\n') {
+                row.push_back(c);
+            }
+        }
+        read_board.push_back(row);
+    }
+    read.close();
+
+    /* Iterates through vector to utilize x, y positions and sets bits based
+     * on whether or not a ship position is found in the setup board */
+    for (int i = 0; i < board_size; i++) {
+        for (int j = 0; j < board_size; j++) {
+            //Read setup board file
+            if (read_board[j][i] != '_') {
+                board_obj->set(j, i);
+            }
+        }
+    }
+
+    /* Clear read board as its contents are no longer needed */
+    read_board.clear();
+
+    /* Return the bit array with bits now set in the correct spaces */
+    return board_obj;
 }
 
 int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
@@ -91,7 +132,7 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
         p.open("player_1.setup_board.txt");
 
     /* Reads the setup board of the opposing player into a 2D vector
-     * While loop and for loop below was taken from Stackoverflow at:
+     * While loop and for loop below was taken from Stack Overflow at:
      * https://stackoverflow.com/questions/56554212/how-do-i-read-a-text-file-into-a-2d-vector
      */
     while (getline(p, line)) {
@@ -104,7 +145,7 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
         board.push_back(row);
     }
 
-    //Close the file reader
+    /* Close the file reader */
     p.close();
 
     /* Determines whether the parameter defined coordinates

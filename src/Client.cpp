@@ -17,9 +17,7 @@
 #include "common.hpp"
 #include "Client.hpp"
 
-Client::~Client() {
-    cout << "Clearing action board" << endl;
-}
+Client::~Client() { /* Deconstructor */ }
 
 
 void Client::initialize(unsigned int player, unsigned int board_size){

@@ -77,7 +77,6 @@ get_bit_elem:
         jg .loop
     .done:                  ; mask is now in rbx
 
-        or  [rdi], cl
         and rdi, rbx        ; get bit
         cmp rdi, 0
         setg al
